@@ -519,8 +519,8 @@
             <h1>🏢 Equipment Asset Manager</h1>
             <p>Track and manage your organization's equipment and assets</p>
             <div class="sync-status">
-                <div class="sync-dot" id="syncDot"></div>
-                <span id="syncStatus">Configuring Google Sheets...</span>
+                <div class="sync-dot error" id="syncDot"></div>
+                <span id="syncStatus">Not connected to Google Sheets</span>
             </div>
         </div>
 
@@ -690,6 +690,16 @@
                 document.getElementById('sheetIdInput').value = SHEET_ID;
                 document.getElementById('configSection').style.display = 'none';
                 loadDataFromSheet();
+            } else {
+                // Show configuration section and update status
+                updateSyncStatus('error', 'Not connected - Please configure Google Sheets');
+                document.getElementById('equipmentContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔧</div>
+                        <h3>Google Sheets Not Connected</h3>
+                        <p>Please enter your API Key and Sheet ID above to get started.</p>
+                    </div>
+                `;
             }
         }
 
