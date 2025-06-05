@@ -48,6 +48,44 @@
             font-size: 1.1rem;
         }
 
+        .config-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .config-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .config-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .config-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -286,6 +324,32 @@
             min-width: 80px;
         }
 
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        .sync-dot.error {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -395,45 +459,34 @@
             opacity: 0.3;
         }
 
-        .sync-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
+        .loading {
+            text-align: center;
+            padding: 40px;
             color: #666;
         }
 
-        .sync-dot {
-            width: 8px;
-            height: 8px;
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
             border-radius: 50%;
-            background: #4CAF50;
-            animation: pulse 2s infinite;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .history-item {
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
             padding: 15px;
-            border-left: 3px solid #667eea;
-            background: #f8f9fa;
-            margin-bottom: 10px;
-            border-radius: 5px;
-        }
-
-        .history-date {
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .history-action {
-            font-weight: 600;
-            color: #333;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ffcdd2;
         }
 
         @media (max-width: 768px) {
@@ -445,25 +498,17 @@
                 font-size: 2rem;
             }
 
-            .controls-row {
+            .controls-row, .config-row {
                 flex-direction: column;
                 align-items: stretch;
             }
 
-            .search-box {
+            .search-box, .config-input {
                 min-width: 100%;
             }
 
             .equipment-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .equipment-actions {
-                flex-direction: column;
-            }
-
-            .btn-small {
-                flex: none;
             }
         }
     </style>
@@ -474,8 +519,25 @@
             <h1>🏢 Equipment Asset Manager</h1>
             <p>Track and manage your organization's equipment and assets</p>
             <div class="sync-status">
-                <div class="sync-dot"></div>
-                <span>Connected to Google Sheets</span>
+                <div class="sync-dot" id="syncDot"></div>
+                <span id="syncStatus">Configuring Google Sheets...</span>
+            </div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="config-section" id="configSection">
+            <div class="config-header">🔧 Google Sheets Configuration</div>
+            <div class="config-row">
+                <input type="text" id="apiKeyInput" class="config-input" placeholder="Enter your Google API Key">
+                <input type="text" id="sheetIdInput" class="config-input" placeholder="Enter your Google Sheet ID">
+                <button class="btn btn-primary" onclick="saveConfiguration()">Connect Sheet</button>
+            </div>
+            <div style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                📋 <strong>Setup Instructions:</strong><br>
+                1. Get API Key from <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a><br>
+                2. Enable Google Sheets API<br>
+                3. Copy Sheet ID from your Google Sheets URL<br>
+                4. Make sure your sheet is publicly accessible
             </div>
         </div>
 
@@ -520,12 +582,14 @@
                 <button class="btn btn-success" onclick="refreshData()">🔄 Refresh</button>
                 <button class="btn btn-primary" onclick="exportData()">📊 Export Report</button>
                 <button class="btn btn-warning" onclick="showMaintenanceSchedule()">🔧 Maintenance</button>
-                <button class="btn btn-primary" onclick="showCheckoutHistory()">📋 History</button>
             </div>
         </div>
 
         <div id="equipmentContainer">
-            <!-- Equipment cards will be rendered here -->
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Connect to Google Sheets to load your equipment data...</p>
+            </div>
         </div>
     </div>
 
@@ -603,153 +667,170 @@
         </div>
     </div>
 
-    <!-- Check Out/In Modal -->
-    <div id="checkoutModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="checkoutModalTitle">Check Out Equipment</h2>
-                <button class="close-btn" onclick="closeCheckoutModal()">&times;</button>
-            </div>
-            <form id="checkoutForm">
-                <div class="form-group">
-                    <label class="form-label">Equipment</label>
-                    <input type="text" id="checkoutEquipmentName" class="form-input" readonly>
-                    <input type="hidden" id="checkoutEquipmentId">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Assign To</label>
-                    <input type="text" id="checkoutAssignee" class="form-input" required placeholder="Employee name">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Department</label>
-                    <input type="text" id="checkoutDepartment" class="form-input" placeholder="Department or team">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Expected Return Date</label>
-                    <input type="date" id="checkoutReturnDate" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Purpose/Notes</label>
-                    <textarea id="checkoutNotes" class="form-textarea" placeholder="Purpose of checkout or additional notes..."></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn" onclick="closeCheckoutModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Check Out</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
-        // Sample equipment data that would come from Google Sheets
-        let equipmentData = [
-            {
-                id: 1,
-                name: "MacBook Pro 16-inch",
-                tag: "COMP-001",
-                category: "Computers",
-                status: "in-use",
-                assignee: "John Smith",
-                location: "Office Floor 2",
-                purchaseDate: "2023-01-15",
-                cost: 2499.99,
-                warrantyExpiry: "2026-01-15",
-                supplier: "Apple Store",
-                notes: "Development laptop with 32GB RAM",
-                lastUpdated: "2025-06-01",
-                checkoutHistory: [
-                    { date: "2025-06-01", action: "Checked out to John Smith", user: "Admin" },
-                    { date: "2025-05-15", action: "Returned from maintenance", user: "IT Support" }
-                ]
-            },
-            {
-                id: 2,
-                name: "Standing Desk",
-                tag: "FURN-012",
-                category: "Furniture",
-                status: "available",
-                assignee: "",
-                location: "Storage Room A",
-                purchaseDate: "2024-03-20",
-                cost: 599.99,
-                warrantyExpiry: "2027-03-20",
-                supplier: "Office Depot",
-                notes: "Height adjustable, motorized",
-                lastUpdated: "2025-06-02",
-                checkoutHistory: []
-            },
-            {
-                id: 3,
-                name: "Canon DSLR Camera",
-                tag: "ELEC-005",
-                category: "Electronics",
-                status: "maintenance",
-                assignee: "",
-                location: "IT Department",
-                purchaseDate: "2022-08-10",
-                cost: 899.99,
-                warrantyExpiry: "2025-08-10",
-                supplier: "B&H Photo",
-                notes: "Needs lens cleaning, scheduled maintenance",
-                lastUpdated: "2025-06-03",
-                checkoutHistory: [
-                    { date: "2025-06-03", action: "Sent for maintenance", user: "Jane Doe" },
-                    { date: "2025-05-20", action: "Returned by Marketing team", user: "Admin" }
-                ]
-            },
-            {
-                id: 4,
-                name: "Conference Room Projector",
-                tag: "PROJ-201",
-                category: "Office Equipment",
-                status: "available",
-                assignee: "",
-                location: "Conference Room B",
-                purchaseDate: "2023-11-05",
-                cost: 1299.99,
-                warrantyExpiry: "2026-11-05",
-                supplier: "Epson",
-                notes: "4K resolution, wireless connectivity",
-                lastUpdated: "2025-06-04",
-                checkoutHistory: []
-            },
-            {
-                id: 5,
-                name: "Company Vehicle - Honda Civic",
-                tag: "VEH-003",
-                category: "Vehicles",
-                status: "in-use",
-                assignee: "Sales Team",
-                location: "Parking Lot",
-                purchaseDate: "2021-06-15",
-                cost: 24999.99,
-                warrantyExpiry: "2024-06-15",
-                supplier: "Honda Dealership",
-                notes: "Regular maintenance scheduled monthly",
-                lastUpdated: "2025-06-05",
-                checkoutHistory: [
-                    { date: "2025-06-01", action: "Assigned to Sales Team for client visits", user: "HR Manager" }
-                ]
-            }
-        ];
-
-        let filteredData = [...equipmentData];
+        // Configuration
+        let API_KEY = '';
+        let SHEET_ID = '';
+        let equipmentData = [];
+        let filteredData = [];
         let editingEquipment = null;
 
-        // Initialize the app
+        // Load saved configuration
         document.addEventListener('DOMContentLoaded', function() {
-            updateStats();
-            populateFilters();
-            renderEquipment();
+            loadConfiguration();
             setupEventListeners();
         });
+
+        function loadConfiguration() {
+            API_KEY = sessionStorage.getItem('googleApiKey') || '';
+            SHEET_ID = sessionStorage.getItem('googleSheetId') || '';
+            
+            if (API_KEY && SHEET_ID) {
+                document.getElementById('apiKeyInput').value = API_KEY;
+                document.getElementById('sheetIdInput').value = SHEET_ID;
+                document.getElementById('configSection').style.display = 'none';
+                loadDataFromSheet();
+            }
+        }
+
+        function saveConfiguration() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            const sheetId = document.getElementById('sheetIdInput').value.trim();
+            
+            if (!apiKey || !sheetId) {
+                alert('Please enter both API Key and Sheet ID');
+                return;
+            }
+
+            API_KEY = apiKey;
+            SHEET_ID = sheetId;
+            
+            // Save to session storage
+            sessionStorage.setItem('googleApiKey', API_KEY);
+            sessionStorage.setItem('googleSheetId', SHEET_ID);
+            
+            document.getElementById('configSection').style.display = 'none';
+            loadDataFromSheet();
+        }
 
         function setupEventListeners() {
             document.getElementById('searchInput').addEventListener('input', filterEquipment);
             document.getElementById('categoryFilter').addEventListener('change', filterEquipment);
             document.getElementById('statusFilter').addEventListener('change', filterEquipment);
             document.getElementById('equipmentForm').addEventListener('submit', handleFormSubmit);
-            document.getElementById('checkoutForm').addEventListener('submit', handleCheckoutSubmit);
+        }
+
+        async function loadDataFromSheet() {
+            try {
+                updateSyncStatus('loading', 'Loading data from Google Sheets...');
+                
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load data: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const rows = data.values || [];
+                
+                if (rows.length <= 1) {
+                    // No data rows, just headers
+                    equipmentData = [];
+                } else {
+                    // Convert rows to equipment objects
+                    const headers = rows[0];
+                    equipmentData = rows.slice(1).map((row, index) => ({
+                        id: row[0] || (index + 1),
+                        name: row[1] || '',
+                        tag: row[2] || '',
+                        category: row[3] || '',
+                        status: row[4] || 'available',
+                        assignee: row[5] || '',
+                        location: row[6] || '',
+                        purchaseDate: row[7] || '',
+                        cost: parseFloat(row[8]) || null,
+                        warrantyExpiry: row[9] || '',
+                        supplier: row[10] || '',
+                        notes: row[11] || '',
+                        lastUpdated: row[12] || new Date().toISOString().split('T')[0]
+                    }));
+                }
+                
+                updateSyncStatus('success', 'Connected to Google Sheets');
+                updateStats();
+                populateFilters();
+                renderEquipment();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                updateSyncStatus('error', 'Failed to connect to Google Sheets');
+                showError('Failed to load data from Google Sheets. Please check your configuration.');
+            }
+        }
+
+        async function saveDataToSheet() {
+            try {
+                updateSyncStatus('loading', 'Saving to Google Sheets...');
+                
+                // Prepare data for Google Sheets
+                const headers = ['ID', 'Name', 'Tag', 'Category', 'Status', 'Assignee', 'Location', 
+                               'PurchaseDate', 'Cost', 'WarrantyExpiry', 'Supplier', 'Notes', 'LastUpdated'];
+                
+                const rows = [headers, ...equipmentData.map(item => [
+                    item.id,
+                    item.name,
+                    item.tag,
+                    item.category,
+                    item.status,
+                    item.assignee || '',
+                    item.location,
+                    item.purchaseDate || '',
+                    item.cost || '',
+                    item.warrantyExpiry || '',
+                    item.supplier || '',
+                    item.notes || '',
+                    item.lastUpdated
+                ])];
+                
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?valueInputOption=RAW&key=${API_KEY}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            values: rows
+                        })
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to save data: ${response.status}`);
+                }
+                
+                updateSyncStatus('success', 'Saved to Google Sheets');
+                showNotification('Data saved to Google Sheets successfully!');
+                
+            } catch (error) {
+                console.error('Error saving data:', error);
+                updateSyncStatus('error', 'Failed to save to Google Sheets');
+                showError('Failed to save data to Google Sheets. Changes saved locally only.');
+            }
+        }
+
+        function updateSyncStatus(status, message) {
+            const dot = document.getElementById('syncDot');
+            const statusText = document.getElementById('syncStatus');
+            
+            dot.className = 'sync-dot';
+            if (status === 'error') {
+                dot.classList.add('error');
+            }
+            
+            statusText.textContent = message;
         }
 
         function updateStats() {
@@ -835,11 +916,11 @@
                                     </div>
                                     <div class="equipment-detail">
                                         <span class="equipment-detail-label">Purchase Date:</span>
-                                        <span class="equipment-detail-value">${new Date(item.purchaseDate).toLocaleDateString()}</span>
+                                        <span class="equipment-detail-value">${item.purchaseDate ? new Date(item.purchaseDate).toLocaleDateString() : 'N/A'}</span>
                                     </div>
                                     <div class="equipment-detail">
                                         <span class="equipment-detail-label">Cost:</span>
-                                        <span class="equipment-detail-value">$${item.cost?.toLocaleString() || 'N/A'}</span>
+                                        <span class="equipment-detail-value">${item.cost?.toLocaleString() || 'N/A'}</span>
                                     </div>
                                     <div class="equipment-detail">
                                         <span class="equipment-detail-label">Warranty:</span>
@@ -854,7 +935,6 @@
                                         `<button class="btn btn-warning btn-small" onclick="checkinEquipment(${item.id})">Check In</button>` :
                                         `<button class="btn btn-warning btn-small" onclick="updateStatus(${item.id})">Update Status</button>`
                                     }
-                                    <button class="btn btn-primary btn-small" onclick="viewHistory(${item.id})">History</button>
                                     <button class="btn btn-danger btn-small" onclick="deleteEquipment(${item.id})">Delete</button>
                                 </div>
                             </div>
@@ -923,12 +1003,17 @@
             const equipment = equipmentData.find(item => item.id === id);
             if (!equipment) return;
 
-            document.getElementById('checkoutModalTitle').textContent = 'Check Out Equipment';
-            document.getElementById('checkoutEquipmentName').value = equipment.name;
-            document.getElementById('checkoutEquipmentId').value = id;
-            document.getElementById('checkoutForm').reset();
-            document.getElementById('checkoutEquipmentName').value = equipment.name;
-            document.getElementById('checkoutModal').style.display = 'flex';
+            const assignee = prompt(`Check out ${equipment.name} to:`, '');
+            if (!assignee) return;
+
+            equipment.status = 'in-use';
+            equipment.assignee = assignee;
+            equipment.lastUpdated = new Date().toISOString().split('T')[0];
+
+            showNotification(`${equipment.name} checked out to ${assignee}!`);
+            updateStats();
+            renderEquipment();
+            saveDataToSheet();
         }
 
         function checkinEquipment(id) {
@@ -940,24 +1025,51 @@
             equipment.status = 'available';
             equipment.assignee = '';
             equipment.lastUpdated = new Date().toISOString().split('T')[0];
-            
-            // Add to history
-            equipment.checkoutHistory.unshift({
-                date: new Date().toISOString().split('T')[0],
-                action: `Checked in from ${equipment.assignee || 'unknown user'}`,
-                user: 'Current User'
-            });
 
             showNotification(`${equipment.name} checked in successfully!`);
             updateStats();
             renderEquipment();
+            saveDataToSheet();
         }
 
-        function closeCheckoutModal() {
-            document.getElementById('checkoutModal').style.display = 'none';
+        function updateStatus(id) {
+            const equipment = equipmentData.find(item => item.id === id);
+            if (!equipment) return;
+
+            const newStatus = prompt(`Update status for ${equipment.name}:\n\nCurrent: ${getStatusText(equipment.status)}\n\nEnter new status (available, in-use, maintenance, retired):`, equipment.status);
+            
+            if (newStatus && ['available', 'in-use', 'maintenance', 'retired'].includes(newStatus)) {
+                equipment.status = newStatus;
+                equipment.lastUpdated = new Date().toISOString().split('T')[0];
+                
+                if (newStatus === 'available') {
+                    equipment.assignee = '';
+                }
+
+                showNotification(`Status updated for ${equipment.name}!`);
+                updateStats();
+                renderEquipment();
+                saveDataToSheet();
+            }
         }
 
-        function handleFormSubmit(e) {
+        function deleteEquipment(id) {
+            const equipment = equipmentData.find(item => item.id === id);
+            if (!equipment) return;
+
+            if (!confirm(`Are you sure you want to delete ${equipment.name}?\n\nThis action cannot be undone.`)) return;
+
+            const index = equipmentData.findIndex(item => item.id === id);
+            equipmentData.splice(index, 1);
+            
+            showNotification(`${equipment.name} deleted successfully!`);
+            updateStats();
+            populateFilters();
+            filterEquipment();
+            saveDataToSheet();
+        }
+
+        async function handleFormSubmit(e) {
             e.preventDefault();
             
             const formData = {
@@ -979,26 +1091,10 @@
                 // Update existing equipment
                 const index = equipmentData.findIndex(item => item.id === editingEquipment.id);
                 equipmentData[index] = { ...equipmentData[index], ...formData };
-                
-                // Add to history
-                equipmentData[index].checkoutHistory.unshift({
-                    date: new Date().toISOString().split('T')[0],
-                    action: 'Equipment details updated',
-                    user: 'Current User'
-                });
             } else {
                 // Add new equipment
-                const newId = Math.max(...equipmentData.map(item => item.id)) + 1;
-                const newEquipment = { 
-                    id: newId, 
-                    ...formData,
-                    checkoutHistory: [{
-                        date: new Date().toISOString().split('T')[0],
-                        action: 'Equipment added to inventory',
-                        user: 'Current User'
-                    }]
-                };
-                equipmentData.push(newEquipment);
+                const newId = equipmentData.length > 0 ? Math.max(...equipmentData.map(item => item.id)) + 1 : 1;
+                equipmentData.push({ id: newId, ...formData });
             }
 
             showNotification(editingEquipment ? 'Equipment updated successfully!' : 'Equipment added successfully!');
@@ -1007,108 +1103,11 @@
             populateFilters();
             filterEquipment();
             closeModal();
-        }
-
-        function handleCheckoutSubmit(e) {
-            e.preventDefault();
-            
-            const equipmentId = parseInt(document.getElementById('checkoutEquipmentId').value);
-            const assignee = document.getElementById('checkoutAssignee').value;
-            const department = document.getElementById('checkoutDepartment').value;
-            const returnDate = document.getElementById('checkoutReturnDate').value;
-            const notes = document.getElementById('checkoutNotes').value;
-
-            const equipment = equipmentData.find(item => item.id === equipmentId);
-            if (!equipment) return;
-
-            equipment.status = 'in-use';
-            equipment.assignee = assignee + (department ? ` (${department})` : '');
-            equipment.lastUpdated = new Date().toISOString().split('T')[0];
-            
-            // Add to history
-            equipment.checkoutHistory.unshift({
-                date: new Date().toISOString().split('T')[0],
-                action: `Checked out to ${assignee}${department ? ` (${department})` : ''}${returnDate ? `, expected return: ${returnDate}` : ''}`,
-                user: 'Current User',
-                notes: notes
-            });
-
-            showNotification(`${equipment.name} checked out to ${assignee} successfully!`);
-            updateStats();
-            renderEquipment();
-            closeCheckoutModal();
-        }
-
-        function updateStatus(id) {
-            const equipment = equipmentData.find(item => item.id === id);
-            if (!equipment) return;
-
-            const newStatus = prompt(`Update status for ${equipment.name}:\n\nCurrent: ${getStatusText(equipment.status)}\n\nEnter new status (available, in-use, maintenance, retired):`, equipment.status);
-            
-            if (newStatus && ['available', 'in-use', 'maintenance', 'retired'].includes(newStatus)) {
-                const oldStatus = equipment.status;
-                equipment.status = newStatus;
-                equipment.lastUpdated = new Date().toISOString().split('T')[0];
-                
-                // Add to history
-                equipment.checkoutHistory.unshift({
-                    date: new Date().toISOString().split('T')[0],
-                    action: `Status changed from ${getStatusText(oldStatus)} to ${getStatusText(newStatus)}`,
-                    user: 'Current User'
-                });
-
-                if (newStatus === 'available') {
-                    equipment.assignee = '';
-                }
-
-                showNotification(`Status updated for ${equipment.name}!`);
-                updateStats();
-                renderEquipment();
-            }
-        }
-
-        function viewHistory(id) {
-            const equipment = equipmentData.find(item => item.id === id);
-            if (!equipment) return;
-
-            const historyHtml = equipment.checkoutHistory.map(entry => `
-                <div class="history-item">
-                    <div class="history-date">${new Date(entry.date).toLocaleDateString()} - ${entry.user}</div>
-                    <div class="history-action">${entry.action}</div>
-                    ${entry.notes ? `<div style="font-size: 0.9rem; color: #666; margin-top: 5px;">${entry.notes}</div>` : ''}
-                </div>
-            `).join('');
-
-            alert(`Equipment History: ${equipment.name}\n\n${equipment.checkoutHistory.map(entry => 
-                `${entry.date}: ${entry.action} (${entry.user})`
-            ).join('\n')}`);
-        }
-
-        function deleteEquipment(id) {
-            const equipment = equipmentData.find(item => item.id === id);
-            if (!equipment) return;
-
-            if (!confirm(`Are you sure you want to delete ${equipment.name}?\n\nThis action cannot be undone.`)) return;
-
-            const index = equipmentData.findIndex(item => item.id === id);
-            equipmentData.splice(index, 1);
-            
-            showNotification(`${equipment.name} deleted successfully!`);
-            updateStats();
-            populateFilters();
-            filterEquipment();
+            saveDataToSheet();
         }
 
         function refreshData() {
-            showNotification('Syncing with Google Sheets...');
-            
-            // Simulate API call to Google Sheets
-            setTimeout(() => {
-                showNotification('Data synchronized successfully!');
-                updateStats();
-                populateFilters();
-                filterEquipment();
-            }, 1000);
+            loadDataFromSheet();
         }
 
         function exportData() {
@@ -1136,30 +1135,6 @@
             alert(`Equipment Requiring Attention:\n\n${report}`);
         }
 
-        function showCheckoutHistory() {
-            const recentActivity = equipmentData
-                .flatMap(equipment => 
-                    equipment.checkoutHistory.map(entry => ({
-                        ...entry,
-                        equipmentName: equipment.name,
-                        equipmentTag: equipment.tag
-                    }))
-                )
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 10);
-
-            if (recentActivity.length === 0) {
-                alert('No recent activity found.');
-                return;
-            }
-
-            const report = recentActivity.map(entry => 
-                `${entry.date}: ${entry.equipmentName} (${entry.equipmentTag}) - ${entry.action}`
-            ).join('\n');
-
-            alert(`Recent Activity (Last 10 entries):\n\n${report}`);
-        }
-
         function convertToCSV(data) {
             if (data.length === 0) return '';
             
@@ -1176,7 +1151,7 @@
                     item.status,
                     `"${item.assignee || ''}"`,
                     `"${item.location}"`,
-                    item.purchaseDate,
+                    item.purchaseDate || '',
                     item.cost || '',
                     item.warrantyExpiry || '',
                     `"${item.supplier || ''}"`,
@@ -1202,7 +1177,6 @@
         }
 
         function showNotification(message) {
-            // Create a simple notification
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
@@ -1233,23 +1207,26 @@
             }, 3000);
         }
 
-        // Close modals when clicking outside
+        function showError(message) {
+            const container = document.getElementById('equipmentContainer');
+            container.innerHTML = `
+                <div class="error-message">
+                    <strong>Error:</strong> ${message}
+                    <br><br>
+                    <button class="btn btn-primary" onclick="document.getElementById('configSection').style.display='block'">
+                        Reconfigure Connection
+                    </button>
+                </div>
+            `;
+        }
+
+        // Close modal when clicking outside
         window.onclick = function(event) {
-            const equipmentModal = document.getElementById('equipmentModal');
-            const checkoutModal = document.getElementById('checkoutModal');
-            
-            if (event.target === equipmentModal) {
+            const modal = document.getElementById('equipmentModal');
+            if (event.target === modal) {
                 closeModal();
-            }
-            if (event.target === checkoutModal) {
-                closeCheckoutModal();
             }
         }
 
-        // Initialize the app when page loads
-        updateStats();
-        populateFilters();
-        renderEquipment();
-    </script>
-</body>
-</html>
+        // Initialize filtered data
+        filteredData = [...equipmentData];
