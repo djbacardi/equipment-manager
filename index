@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Asset Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .equipment-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .equipment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .equipment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .equipment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .equipment-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            flex: 1;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-available {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-in-use {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-maintenance {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .status-retired {
+            background: #f5f5f5;
+            color: #757575;
+        }
+
+        .equipment-details {
+            margin-bottom: 20px;
+        }
+
+        .equipment-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .equipment-detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .equipment-detail-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .equipment-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .history-item {
+            padding: 15px;
+            border-left: 3px solid #667eea;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .history-date {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .history-action {
+            font-weight: 600;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .equipment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .equipment-actions {
+                flex-direction: column;
+            }
+
+            .btn-small {
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Equipment Asset Manager</h1>
+            <p>Track and manage your organization's equipment and assets</p>
+            <div class="sync-status">
+                <div class="sync-dot"></div>
+                <span>Connected to Google Sheets</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalEquipment">-</div>
+                <div class="stat-label">Total Assets</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="availableEquipment">-</div>
+                <div class="stat-label">Available</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="inUseEquipment">-</div>
+                <div class="stat-label">In Use</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="maintenanceEquipment">-</div>
+                <div class="stat-label">Maintenance</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="controls-row">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search equipment by name, tag, or assignee...">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <select id="categoryFilter" class="filter-select">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="statusFilter" class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="available">Available</option>
+                    <option value="in-use">In Use</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="retired">Retired</option>
+                </select>
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Equipment</button>
+            </div>
+            <div class="controls-row">
+                <button class="btn btn-success" onclick="refreshData()">🔄 Refresh</button>
+                <button class="btn btn-primary" onclick="exportData()">📊 Export Report</button>
+                <button class="btn btn-warning" onclick="showMaintenanceSchedule()">🔧 Maintenance</button>
+                <button class="btn btn-primary" onclick="showCheckoutHistory()">📋 History</button>
+            </div>
+        </div>
+
+        <div id="equipmentContainer">
+            <!-- Equipment cards will be rendered here -->
+        </div>
+    </div>
+
+    <!-- Add/Edit Equipment Modal -->
+    <div id="equipmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add New Equipment</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="equipmentForm">
+                <div class="form-group">
+                    <label class="form-label">Equipment Name</label>
+                    <input type="text" id="equipmentName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Asset Tag / Serial Number</label>
+                    <input type="text" id="equipmentTag" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="equipmentCategory" class="form-select" required>
+                        <option value="">Select Category</option>
+                        <option value="Computers">Computers</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Vehicles">Vehicles</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Office Equipment">Office Equipment</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="equipmentStatus" class="form-select" required>
+                        <option value="available">Available</option>
+                        <option value="in-use">In Use</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="retired">Retired</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assigned To</label>
+                    <input type="text" id="equipmentAssignee" class="form-input" placeholder="Employee name or department">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" id="equipmentLocation" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purchase Date</label>
+                    <input type="date" id="equipmentPurchaseDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purchase Cost ($)</label>
+                    <input type="number" id="equipmentCost" class="form-input" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warranty Expiry</label>
+                    <input type="date" id="equipmentWarranty" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Supplier/Vendor</label>
+                    <input type="text" id="equipmentSupplier" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea id="equipmentNotes" class="form-textarea" placeholder="Additional notes, specifications, or comments..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Equipment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Check Out/In Modal -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="checkoutModalTitle">Check Out Equipment</h2>
+                <button class="close-btn" onclick="closeCheckoutModal()">&times;</button>
+            </div>
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label class="form-label">Equipment</label>
+                    <input type="text" id="checkoutEquipmentName" class="form-input" readonly>
+                    <input type="hidden" id="checkoutEquipmentId">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assign To</label>
+                    <input type="text" id="checkoutAssignee" class="form-input" required placeholder="Employee name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Department</label>
+                    <input type="text" id="checkoutDepartment" class="form-input" placeholder="Department or team">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expected Return Date</label>
+                    <input type="date" id="checkoutReturnDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purpose/Notes</label>
+                    <textarea id="checkoutNotes" class="form-textarea" placeholder="Purpose of checkout or additional notes..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeCheckoutModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Check Out</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Sample equipment data that would come from Google Sheets
+        let equipmentData = [
+            {
+                id: 1,
+                name: "MacBook Pro 16-inch",
+                tag: "COMP-001",
+                category: "Computers",
+                status: "in-use",
+                assignee: "John Smith",
+                location: "Office Floor 2",
+                purchaseDate: "2023-01-15",
+                cost: 2499.99,
+                warrantyExpiry: "2026-01-15",
+                supplier: "Apple Store",
+                notes: "Development laptop with 32GB RAM",
+                lastUpdated: "2025-06-01",
+                checkoutHistory: [
+                    { date: "2025-06-01", action: "Checked out to John Smith", user: "Admin" },
+                    { date: "2025-05-15", action: "Returned from maintenance", user: "IT Support" }
+                ]
+            },
+            {
+                id: 2,
+                name: "Standing Desk",
+                tag: "FURN-012",
+                category: "Furniture",
+                status: "available",
+                assignee: "",
+                location: "Storage Room A",
+                purchaseDate: "2024-03-20",
+                cost: 599.99,
+                warrantyExpiry: "2027-03-20",
+                supplier: "Office Depot",
+                notes: "Height adjustable, motorized",
+                lastUpdated: "2025-06-02",
+                checkoutHistory: []
+            },
+            {
+                id: 3,
+                name: "Canon DSLR Camera",
+                tag: "ELEC-005",
+                category: "Electronics",
+                status: "maintenance",
+                assignee: "",
+                location: "IT Department",
+                purchaseDate: "2022-08-10",
+                cost: 899.99,
+                warrantyExpiry: "2025-08-10",
+                supplier: "B&H Photo",
+                notes: "Needs lens cleaning, scheduled maintenance",
+                lastUpdated: "2025-06-03",
+                checkoutHistory: [
+                    { date: "2025-06-03", action: "Sent for maintenance", user: "Jane Doe" },
+                    { date: "2025-05-20", action: "Returned by Marketing team", user: "Admin" }
+                ]
+            },
+            {
+                id: 4,
+                name: "Conference Room Projector",
+                tag: "PROJ-201",
+                category: "Office Equipment",
+                status: "available",
+                assignee: "",
+                location: "Conference Room B",
+                purchaseDate: "2023-11-05",
+                cost: 1299.99,
+                warrantyExpiry: "2026-11-05",
+                supplier: "Epson",
+                notes: "4K resolution, wireless connectivity",
+                lastUpdated: "2025-06-04",
+                checkoutHistory: []
+            },
+            {
+                id: 5,
+                name: "Company Vehicle - Honda Civic",
+                tag: "VEH-003",
+                category: "Vehicles",
+                status: "in-use",
+                assignee: "Sales Team",
+                location: "Parking Lot",
+                purchaseDate: "2021-06-15",
+                cost: 24999.99,
+                warrantyExpiry: "2024-06-15",
+                supplier: "Honda Dealership",
+                notes: "Regular maintenance scheduled monthly",
+                lastUpdated: "2025-06-05",
+                checkoutHistory: [
+                    { date: "2025-06-01", action: "Assigned to Sales Team for client visits", user: "HR Manager" }
+                ]
+            }
+        ];
+
+        let filteredData = [...equipmentData];
+        let editingEquipment = null;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            populateFilters();
+            renderEquipment();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', filterEquipment);
+            document.getElementById('categoryFilter').addEventListener('change', filterEquipment);
+            document.getElementById('statusFilter').addEventListener('change', filterEquipment);
+            document.getElementById('equipmentForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('checkoutForm').addEventListener('submit', handleCheckoutSubmit);
+        }
+
+        function updateStats() {
+            const total = equipmentData.length;
+            const available = equipmentData.filter(item => item.status === 'available').length;
+            const inUse = equipmentData.filter(item => item.status === 'in-use').length;
+            const maintenance = equipmentData.filter(item => item.status === 'maintenance').length;
+
+            document.getElementById('totalEquipment').textContent = total;
+            document.getElementById('availableEquipment').textContent = available;
+            document.getElementById('inUseEquipment').textContent = inUse;
+            document.getElementById('maintenanceEquipment').textContent = maintenance;
+        }
+
+        function populateFilters() {
+            const categories = [...new Set(equipmentData.map(item => item.category))];
+            const categoryFilter = document.getElementById('categoryFilter');
+            
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'available': return 'Available';
+                case 'in-use': return 'In Use';
+                case 'maintenance': return 'Maintenance';
+                case 'retired': return 'Retired';
+                default: return status;
+            }
+        }
+
+        function renderEquipment() {
+            const container = document.getElementById('equipmentContainer');
+            
+            if (filteredData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏢</div>
+                        <h3>No equipment found</h3>
+                        <p>Try adjusting your search criteria or add new equipment to your inventory.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <div class="equipment-grid">
+                    ${filteredData.map(item => {
+                        const warrantyStatus = item.warrantyExpiry && new Date(item.warrantyExpiry) < new Date() ? '⚠️ Expired' : '✅ Valid';
+                        
+                        return `
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-name">${item.name}</div>
+                                    <div class="status-badge status-${item.status}">
+                                        ${getStatusText(item.status)}
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Asset Tag:</span>
+                                        <span class="equipment-detail-value">${item.tag}</span>
+                                    </div>
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Category:</span>
+                                        <span class="equipment-detail-value">${item.category}</span>
+                                    </div>
+                                    ${item.assignee ? `
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Assigned To:</span>
+                                        <span class="equipment-detail-value">${item.assignee}</span>
+                                    </div>
+                                    ` : ''}
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Location:</span>
+                                        <span class="equipment-detail-value">${item.location}</span>
+                                    </div>
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Purchase Date:</span>
+                                        <span class="equipment-detail-value">${new Date(item.purchaseDate).toLocaleDateString()}</span>
+                                    </div>
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Cost:</span>
+                                        <span class="equipment-detail-value">$${item.cost?.toLocaleString() || 'N/A'}</span>
+                                    </div>
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Warranty:</span>
+                                        <span class="equipment-detail-value">${warrantyStatus}</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-actions">
+                                    <button class="btn btn-primary btn-small" onclick="editEquipment(${item.id})">Edit</button>
+                                    ${item.status === 'available' ? 
+                                        `<button class="btn btn-success btn-small" onclick="checkoutEquipment(${item.id})">Check Out</button>` :
+                                        item.status === 'in-use' ?
+                                        `<button class="btn btn-warning btn-small" onclick="checkinEquipment(${item.id})">Check In</button>` :
+                                        `<button class="btn btn-warning btn-small" onclick="updateStatus(${item.id})">Update Status</button>`
+                                    }
+                                    <button class="btn btn-primary btn-small" onclick="viewHistory(${item.id})">History</button>
+                                    <button class="btn btn-danger btn-small" onclick="deleteEquipment(${item.id})">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function filterEquipment() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            filteredData = equipmentData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchTerm) ||
+                                    item.tag.toLowerCase().includes(searchTerm) ||
+                                    item.category.toLowerCase().includes(searchTerm) ||
+                                    (item.assignee && item.assignee.toLowerCase().includes(searchTerm)) ||
+                                    item.location.toLowerCase().includes(searchTerm);
+                
+                const matchesCategory = !categoryFilter || item.category === categoryFilter;
+                const matchesStatus = !statusFilter || item.status === statusFilter;
+
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+
+            renderEquipment();
+        }
+
+        function openAddModal() {
+            editingEquipment = null;
+            document.getElementById('modalTitle').textContent = 'Add New Equipment';
+            document.getElementById('equipmentForm').reset();
+            document.getElementById('equipmentModal').style.display = 'flex';
+        }
+
+        function editEquipment(id) {
+            editingEquipment = equipmentData.find(item => item.id === id);
+            if (!editingEquipment) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Equipment';
+            document.getElementById('equipmentName').value = editingEquipment.name;
+            document.getElementById('equipmentTag').value = editingEquipment.tag;
+            document.getElementById('equipmentCategory').value = editingEquipment.category;
+            document.getElementById('equipmentStatus').value = editingEquipment.status;
+            document.getElementById('equipmentAssignee').value = editingEquipment.assignee || '';
+            document.getElementById('equipmentLocation').value = editingEquipment.location;
+            document.getElementById('equipmentPurchaseDate').value = editingEquipment.purchaseDate;
+            document.getElementById('equipmentCost').value = editingEquipment.cost || '';
+            document.getElementById('equipmentWarranty').value = editingEquipment.warrantyExpiry || '';
+            document.getElementById('equipmentSupplier').value = editingEquipment.supplier || '';
+            document.getElementById('equipmentNotes').value = editingEquipment.notes || '';
+            
+            document.getElementById('equipmentModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('equipmentModal').style.display = 'none';
+            editingEquipment = null;
+        }
+
+        function checkoutEquipment(id) {
+            const equipment = equipmentData.find(item => item.id === id);
+            if (!equipment) return;
+
+            document.getElementById('checkoutModalTitle').textContent = 'Check Out Equipment';
+            document.getElementById('checkoutEquipmentName').value = equipment.name;
+            document.getElementById('checkoutEquipmentId').value = id;
+            document.getElementById('checkoutForm').reset();
+            document.getElementById('checkoutEquipmentName').value = equipment.name;
+            document.getElementById('checkoutModal').style.display = 'flex';
+        }
+
+        function checkinEquipment(id) {
+            if (!confirm('Are you sure you want to check in this equipment?')) return;
+
+            const equipment = equipmentData.find(item => item.id === id);
+            if (!equipment) return;
+
+            equipment.status = 'available';
+            equipment.assignee = '';
+            equipment.lastUpdated = new Date().toISOString().split('T')[0];
+            
+            // Add to history
+            equipment.checkoutHistory.unshift({
+                date: new Date().toISOString().split('T')[0],
+                action: `Checked in from ${equipment.assignee || 'unknown user'}`,
+                user: 'Current User'
+            });
+
+            showNotification(`${equipment.name} checked in successfully!`);
+            updateStats();
+            renderEquipment();
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkoutModal').style.display = 'none';
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('equipmentName').value,
+                tag: document.getElementById('equipmentTag').value,
+                category: document.getElementById('equipmentCategory').value,
+                status: document.getElementById('equipmentStatus').value,
+                assignee: document.getElementById('equipmentAssignee').value,
+                location: document.getElementById('equipmentLocation').value,
+                purchaseDate: document.getElementById('equipmentPurchaseDate').value,
+                cost: parseFloat(document.getElementById('equipmentCost').value) || null,
+                warrantyExpiry: document.getElementById('equipmentWarranty').value,
+                supplier: document.getElementById('equipmentSupplier').value,
+                notes: document.getElementById('equipmentNotes').value,
+                lastUpdated: new Date().toISOString().split('T')[0]
+            };
+
+            if (editingEquipment) {
+                // Update existing equipment
+                const index = equipmentData.findIndex(item => item.id === editingEquipment.id);
+                equipmentData[index] = { ...equipmentData[index], ...formData };
+                
+                // Add to history
+                equipmentData[index].checkoutHistory.unshift({
+                    date: new Date().toISOString().split('T')[0],
+                    action: 'Equipment details updated',
+                    user: 'Current User'
+                });
+            } else {
+                // Add new equipment
+                const newId = Math.max(...equipmentData.map(item => item.id)) + 1;
+                const newEquipment = { 
+                    id: newId, 
+                    ...formData,
+                    checkoutHistory: [{
+                        date: new Date().toISOString().split('T')[0],
+                        action: 'Equipment added to inventory',
+                        user: 'Current User'
+                    }]
+                };
+                equipmentData.push(newEquipment);
+            }
+
+            showNotification(editingEquipment ? 'Equipment updated successfully!' : 'Equipment added successfully!');
+            
+            updateStats();
+            populateFilters();
+            filterEquipment();
+            closeModal();
+        }
+
+        function handleCheckoutSubmit(e) {
+            e.preventDefault();
+            
+            const equipmentId = parseInt(document.getElementById('checkoutEquipmentId').value);
+            const assignee = document.getElementById('checkoutAssignee').value;
+            const department = document.getElementById('checkoutDepartment').value;
+            const returnDate = document.getElementById('checkoutReturnDate').value;
+            const notes = document.getElementById('checkoutNotes').value;
+
+            const equipment = equipmentData.find(item => item.id === equipmentId);
+            if (!equipment) return;
+
+            equipment.status = 'in-use';
+            equipment.assignee = assignee + (department ? ` (${department})` : '');
+            equipment.lastUpdated = new Date().toISOString().split('T')[0];
+            
+            // Add to history
+            equipment.checkoutHistory.unshift({
+                date: new Date().toISOString().split('T')[0],
+                action: `Checked out to ${assignee}${department ? ` (${department})` : ''}${returnDate ? `, expected return: ${returnDate}` : ''}`,
+                user: 'Current User',
+                notes: notes
+            });
+
+            showNotification(`${equipment.name} checked out to ${assignee} successfully!`);
+            updateStats();
+            renderEquipment();
+            closeCheckoutModal();
+        }
+
+        function updateStatus(id) {
+            const equipment = equipmentData.find(item => item.id === id);
+            if (!equipment) return;
+
+            const newStatus = prompt(`Update status for ${equipment.name}:\n\nCurrent: ${getStatusText(equipment.status)}\n\nEnter new status (available, in-use, maintenance, retired):`, equipment.status);
+            
+            if (newStatus && ['available', 'in-use', 'maintenance', 'retired'].includes(newStatus)) {
+                const oldStatus = equipment.status;
+                equipment.status = newStatus;
+                equipment.lastUpdated = new Date().toISOString().split('T')[0];
+                
+                // Add to history
+                equipment.checkoutHistory.unshift({
+                    date: new Date().toISOString().split('T')[0],
+                    action: `Status changed from ${getStatusText(oldStatus)} to ${getStatusText(newStatus)}`,
+                    user: 'Current User'
+                });
+
+                if (newStatus === 'available') {
+                    equipment.assignee = '';
+                }
+
+                showNotification(`Status updated for ${equipment.name}!`);
+                updateStats();
+                renderEquipment();
+            }
+        }
+
+        function viewHistory(id) {
+            const equipment = equipmentData.find(item => item.id === id);
+            if (!equipment) return;
+
+            const historyHtml = equipment.checkoutHistory.map(entry => `
+                <div class="history-item">
+                    <div class="history-date">${new Date(entry.date).toLocaleDateString()} - ${entry.user}</div>
+                    <div class="history-action">${entry.action}</div>
+                    ${entry.notes ? `<div style="font-size: 0.9rem; color: #666; margin-top: 5px;">${entry.notes}</div>` : ''}
+                </div>
+            `).join('');
+
+            alert(`Equipment History: ${equipment.name}\n\n${equipment.checkoutHistory.map(entry => 
+                `${entry.date}: ${entry.action} (${entry.user})`
+            ).join('\n')}`);
+        }
+
+        function deleteEquipment(id) {
+            const equipment = equipmentData.find(item => item.id === id);
+            if (!equipment) return;
+
+            if (!confirm(`Are you sure you want to delete ${equipment.name}?\n\nThis action cannot be undone.`)) return;
+
+            const index = equipmentData.findIndex(item => item.id === id);
+            equipmentData.splice(index, 1);
+            
+            showNotification(`${equipment.name} deleted successfully!`);
+            updateStats();
+            populateFilters();
+            filterEquipment();
+        }
+
+        function refreshData() {
+            showNotification('Syncing with Google Sheets...');
+            
+            // Simulate API call to Google Sheets
+            setTimeout(() => {
+                showNotification('Data synchronized successfully!');
+                updateStats();
+                populateFilters();
+                filterEquipment();
+            }, 1000);
+        }
+
+        function exportData() {
+            const csv = convertToCSV(equipmentData);
+            downloadCSV(csv, 'equipment_report.csv');
+            showNotification('Equipment report exported successfully!');
+        }
+
+        function showMaintenanceSchedule() {
+            const maintenanceItems = equipmentData.filter(item => 
+                item.status === 'maintenance' || 
+                (item.warrantyExpiry && new Date(item.warrantyExpiry) < new Date())
+            );
+
+            if (maintenanceItems.length === 0) {
+                alert('No equipment requires immediate maintenance!');
+                return;
+            }
+
+            const report = maintenanceItems.map(item => {
+                const warrantyExpired = item.warrantyExpiry && new Date(item.warrantyExpiry) < new Date();
+                return `• ${item.name} (${item.tag})${warrantyExpired ? ' - WARRANTY EXPIRED' : ''}`;
+            }).join('\n');
+
+            alert(`Equipment Requiring Attention:\n\n${report}`);
+        }
+
+        function showCheckoutHistory() {
+            const recentActivity = equipmentData
+                .flatMap(equipment => 
+                    equipment.checkoutHistory.map(entry => ({
+                        ...entry,
+                        equipmentName: equipment.name,
+                        equipmentTag: equipment.tag
+                    }))
+                )
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 10);
+
+            if (recentActivity.length === 0) {
+                alert('No recent activity found.');
+                return;
+            }
+
+            const report = recentActivity.map(entry => 
+                `${entry.date}: ${entry.equipmentName} (${entry.equipmentTag}) - ${entry.action}`
+            ).join('\n');
+
+            alert(`Recent Activity (Last 10 entries):\n\n${report}`);
+        }
+
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+            
+            const headers = ['ID', 'Name', 'Asset Tag', 'Category', 'Status', 'Assigned To', 'Location', 
+                           'Purchase Date', 'Cost', 'Warranty Expiry', 'Supplier', 'Notes', 'Last Updated'];
+            const csvRows = [headers.join(',')];
+            
+            for (const item of data) {
+                const values = [
+                    item.id,
+                    `"${item.name}"`,
+                    `"${item.tag}"`,
+                    `"${item.category}"`,
+                    item.status,
+                    `"${item.assignee || ''}"`,
+                    `"${item.location}"`,
+                    item.purchaseDate,
+                    item.cost || '',
+                    item.warrantyExpiry || '',
+                    `"${item.supplier || ''}"`,
+                    `"${item.notes || ''}"`,
+                    item.lastUpdated
+                ];
+                csvRows.push(values.join(','));
+            }
+            
+            return csvRows.join('\n');
+        }
+
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', filename);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function showNotification(message) {
+            // Create a simple notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                z-index: 2000;
+                font-weight: 600;
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(400px)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const equipmentModal = document.getElementById('equipmentModal');
+            const checkoutModal = document.getElementById('checkoutModal');
+            
+            if (event.target === equipmentModal) {
+                closeModal();
+            }
+            if (event.target === checkoutModal) {
+                closeCheckoutModal();
+            }
+        }
+
+        // Initialize the app when page loads
+        updateStats();
+        populateFilters();
+        renderEquipment();
+    </script>
+</body>
+</html>
