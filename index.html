@@ -61,6 +61,10 @@
             animation: pulse 2s infinite;
         }
 
+        .sync-dot.error {
+            background: #f44336;
+        }
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -177,6 +181,10 @@
 
         .btn-danger {
             background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
         }
 
         .btn:hover {
@@ -391,6 +399,58 @@
             margin-top: 30px;
         }
 
+        .category-manager {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .category-tag {
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-remove {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .category-add-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .category-add-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -432,6 +492,7 @@
             .equipment-grid { grid-template-columns: 1fr; }
             .equipment-actions { flex-direction: column; }
             .btn-small { flex: none; }
+            .category-add-form { flex-direction: column; }
         }
     </style>
 </head>
@@ -441,8 +502,8 @@
             <h1>🏢 Equipment Asset Manager</h1>
             <p>Track and manage your organization's equipment and assets</p>
             <div class="sync-status">
-                <div class="sync-dot"></div>
-                <span id="syncStatus">Connected to Google Sheets</span>
+                <div class="sync-dot" id="syncDot"></div>
+                <span id="syncStatus">Connecting to Google Sheets...</span>
             </div>
         </div>
 
@@ -486,6 +547,7 @@
             <div class="controls-row">
                 <button class="btn btn-success" onclick="refreshData()">🔄 Refresh</button>
                 <button class="btn btn-primary" onclick="exportData()">📊 Export</button>
+                <button class="btn btn-secondary" onclick="openCategoryModal()">🏷️ Manage Categories</button>
             </div>
         </div>
 
@@ -517,13 +579,6 @@
                     <label class="form-label">Category</label>
                     <select id="equipmentCategory" class="form-select" required>
                         <option value="">Select Category</option>
-                        <option value="Computers">Computers</option>
-                        <option value="Furniture">Furniture</option>
-                        <option value="Tools">Tools</option>
-                        <option value="Vehicles">Vehicles</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Office Equipment">Office Equipment</option>
-                        <option value="Other">Other</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -571,13 +626,42 @@
         </div>
     </div>
 
+    <!-- Category Management Modal -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Manage Categories</h2>
+                <button class="close-btn" onclick="closeCategoryModal()">&times;</button>
+            </div>
+            
+            <div class="category-manager">
+                <div class="form-label">Current Categories:</div>
+                <div class="category-list" id="categoryList">
+                    <!-- Categories will be populated here -->
+                </div>
+                
+                <div class="category-add-form">
+                    <input type="text" id="newCategoryInput" class="category-add-input" placeholder="Add new category">
+                    <button type="button" class="btn btn-primary" onclick="addCategory()">Add</button>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-success" onclick="saveCategoriesAndClose()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Your hardcoded credentials
+        const API_KEY = 'AIzaSyAQXDzrEL3-C28A-4DIJqABhGgjjHs0BE4';
+        const SHEET_ID = '186sATdPxQQc29hS15adU2CDoBuPVP2ABiHJ5o76TPPM';
+        
         // Global variables
-        let API_KEY = sessionStorage.getItem('googleApiKey') || '';
-        let SHEET_ID = sessionStorage.getItem('googleSheetId') || '';
         let equipmentData = [];
         let filteredData = [];
         let editingEquipment = null;
+        let categories = ['Computers', 'Furniture', 'Tools', 'Vehicles', 'Electronics', 'Office Equipment'];
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -590,11 +674,16 @@
             document.getElementById('categoryFilter').addEventListener('change', filterEquipment);
             document.getElementById('statusFilter').addEventListener('change', filterEquipment);
             document.getElementById('equipmentForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('newCategoryInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addCategory();
+                }
+            });
         }
 
         async function loadDataFromSheet() {
             try {
-                updateSyncStatus('Loading data from Google Sheets...');
+                updateSyncStatus('Loading data from Google Sheets...', false);
                 
                 const response = await fetch(
                     `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`
@@ -626,22 +715,27 @@
                         lastUpdated: row[12] || new Date().toISOString().split('T')[0]
                     }));
                 }
+
+                // Update categories from existing data
+                const existingCategories = [...new Set(equipmentData.map(item => item.category).filter(cat => cat))];
+                categories = [...new Set([...categories, ...existingCategories])];
                 
-                updateSyncStatus('Connected to Google Sheets');
+                updateSyncStatus('Connected to Google Sheets', true);
                 updateStats();
                 populateFilters();
+                populateCategorySelect();
                 renderEquipment();
                 
             } catch (error) {
                 console.error('Error loading data:', error);
-                updateSyncStatus('Failed to load data from Google Sheets');
+                updateSyncStatus('Failed to connect to Google Sheets', false);
                 showError('Failed to load data from Google Sheets: ' + error.message);
             }
         }
 
         async function saveDataToSheet() {
             try {
-                updateSyncStatus('Saving to Google Sheets...');
+                updateSyncStatus('Saving to Google Sheets...', false);
                 
                 const headers = ['ID', 'Name', 'Tag', 'Category', 'Status', 'Assignee', 'Location', 
                                'PurchaseDate', 'Cost', 'WarrantyExpiry', 'Supplier', 'Notes', 'LastUpdated'];
@@ -679,18 +773,26 @@
                     throw new Error(`Failed to save: ${response.status}`);
                 }
                 
-                updateSyncStatus('Connected to Google Sheets');
+                updateSyncStatus('Connected to Google Sheets', true);
                 showNotification('Data saved successfully!');
                 
             } catch (error) {
                 console.error('Error saving data:', error);
-                updateSyncStatus('Save failed - Check connection');
+                updateSyncStatus('Save failed - Check connection', false);
                 showNotification('Save failed: ' + error.message, 'error');
             }
         }
 
-        function updateSyncStatus(message) {
-            document.getElementById('syncStatus').textContent = message;
+        function updateSyncStatus(message, isSuccess) {
+            const dot = document.getElementById('syncDot');
+            const status = document.getElementById('syncStatus');
+            
+            dot.className = 'sync-dot';
+            if (!isSuccess) {
+                dot.classList.add('error');
+            }
+            
+            status.textContent = message;
         }
 
         function updateStats() {
@@ -706,10 +808,9 @@
         }
 
         function populateFilters() {
-            const categories = [...new Set(equipmentData.map(item => item.category))];
             const categoryFilter = document.getElementById('categoryFilter');
-            
             categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            
             categories.forEach(category => {
                 if (category) {
                     const option = document.createElement('option');
@@ -718,6 +819,68 @@
                     categoryFilter.appendChild(option);
                 }
             });
+        }
+
+        function populateCategorySelect() {
+            const categorySelect = document.getElementById('equipmentCategory');
+            categorySelect.innerHTML = '<option value="">Select Category</option>';
+            
+            categories.forEach(category => {
+                if (category) {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                }
+            });
+        }
+
+        function renderCategoryList() {
+            const categoryList = document.getElementById('categoryList');
+            categoryList.innerHTML = categories.map(category => `
+                <div class="category-tag">
+                    ${category}
+                    <button class="category-remove" onclick="removeCategory('${category}')">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function addCategory() {
+            const input = document.getElementById('newCategoryInput');
+            const newCategory = input.value.trim();
+            
+            if (newCategory && !categories.includes(newCategory)) {
+                categories.push(newCategory);
+                renderCategoryList();
+                input.value = '';
+                showNotification(`Category "${newCategory}" added!`);
+            } else if (categories.includes(newCategory)) {
+                showNotification('Category already exists!', 'error');
+            }
+        }
+
+        function removeCategory(categoryName) {
+            if (confirm(`Remove category "${categoryName}"?\n\nNote: Equipment using this category will keep their category, but it won't be available for new equipment.`)) {
+                categories = categories.filter(cat => cat !== categoryName);
+                renderCategoryList();
+                showNotification(`Category "${categoryName}" removed!`);
+            }
+        }
+
+        function openCategoryModal() {
+            renderCategoryList();
+            document.getElementById('categoryModal').style.display = 'flex';
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+        }
+
+        function saveCategoriesAndClose() {
+            populateFilters();
+            populateCategorySelect();
+            closeCategoryModal();
+            showNotification('Categories updated!');
         }
 
         function getStatusText(status) {
@@ -738,7 +901,6 @@
                     <div class="empty-state">
                         <div class="empty-state-icon">🏢</div>
                         <h3>No equipment found</h3>
-                        <p>Try adjusting your search criteria or add new equipment to your inventory.</p>
                     </div>
                 `;
                 return;
@@ -778,7 +940,7 @@
                                     </div>
                                     <div class="equipment-detail">
                                         <span class="equipment-detail-label">Cost:</span>
-                                        <span class="equipment-detail-value">$${item.cost ? item.cost.toLocaleString() : 'N/A'}</span>
+                                        <span class="equipment-detail-value">${item.cost ? item.cost.toLocaleString() : 'N/A'}</span>
                                     </div>
                                     <div class="equipment-detail">
                                         <span class="equipment-detail-label">Warranty:</span>
@@ -844,6 +1006,7 @@
             document.getElementById('equipmentAssignee').value = editingEquipment.assignee || '';
             document.getElementById('equipmentLocation').value = editingEquipment.location;
             document.getElementById('equipmentPurchaseDate').value = editingEquipment.purchaseDate;
+            document.getElementById('equipmentCost').value = editingEquipment.cost || '';
             document.getElementById('equipmentWarranty').value = editingEquipment.warrantyExpiry || '';
             document.getElementById('equipmentSupplier').value = editingEquipment.supplier || '';
             document.getElementById('equipmentNotes').value = editingEquipment.notes || '';
@@ -1063,11 +1226,16 @@
             `;
         }
 
-        // Close modal when clicking outside
+        // Close modals when clicking outside
         window.onclick = function(event) {
-            const modal = document.getElementById('equipmentModal');
-            if (event.target === modal) {
+            const equipmentModal = document.getElementById('equipmentModal');
+            const categoryModal = document.getElementById('categoryModal');
+            
+            if (event.target === equipmentModal) {
                 closeModal();
+            }
+            if (event.target === categoryModal) {
+                closeCategoryModal();
             }
         }
 
