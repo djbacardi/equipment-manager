@@ -57,10 +57,6 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #f44336;
-        }
-
-        .sync-dot.connected {
             background: #4CAF50;
             animation: pulse 2s infinite;
         }
@@ -71,7 +67,42 @@
             100% { opacity: 1; }
         }
 
-        .config-section {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 15px;
@@ -80,33 +111,43 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
-        .config-header {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .config-row {
+        .controls-row {
             display: flex;
+            flex-wrap: wrap;
             gap: 15px;
             align-items: center;
             margin-bottom: 15px;
-            flex-wrap: wrap;
         }
 
-        .config-input {
+        .search-box {
             flex: 1;
-            min-width: 200px;
-            padding: 12px 15px;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
             border: 2px solid #e1e5e9;
             border-radius: 10px;
             font-size: 1rem;
         }
 
-        .config-input:focus {
-            outline: none;
-            border-color: #667eea;
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
         }
 
         .btn {
@@ -118,21 +159,242 @@
             cursor: pointer;
             transition: all 0.3s ease;
             color: white;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
             background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .main-content {
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .equipment-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 15px;
-            padding: 40px;
-            text-align: center;
+            padding: 25px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .equipment-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .equipment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .equipment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .equipment-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            flex: 1;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-available {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-in-use {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-maintenance {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .status-retired {
+            background: #f5f5f5;
+            color: #757575;
+        }
+
+        .equipment-details {
+            margin-bottom: 20px;
+        }
+
+        .equipment-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .equipment-detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .equipment-detail-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .equipment-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
         }
 
         .empty-state-icon {
@@ -141,30 +403,35 @@
             opacity: 0.3;
         }
 
-        .setup-info {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: left;
-            font-size: 0.9rem;
+        .loading {
+            text-align: center;
+            padding: 40px;
             color: #666;
         }
 
-        .setup-info a {
-            color: #667eea;
-            text-decoration: none;
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
 
-        .setup-info a:hover {
-            text-decoration: underline;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
             .container { padding: 15px; }
             .header h1 { font-size: 2rem; }
-            .config-row { flex-direction: column; align-items: stretch; }
-            .config-input { min-width: 100%; }
+            .controls-row { flex-direction: column; align-items: stretch; }
+            .search-box { min-width: 100%; }
+            .equipment-grid { grid-template-columns: 1fr; }
+            .equipment-actions { flex-direction: column; }
+            .btn-small { flex: none; }
         }
     </style>
 </head>
@@ -174,187 +441,638 @@
             <h1>🏢 Equipment Asset Manager</h1>
             <p>Track and manage your organization's equipment and assets</p>
             <div class="sync-status">
-                <div class="sync-dot" id="syncDot"></div>
-                <span id="syncStatus">Not connected to Google Sheets</span>
+                <div class="sync-dot"></div>
+                <span id="syncStatus">Connected to Google Sheets</span>
             </div>
         </div>
 
-        <div class="config-section" id="configSection">
-            <div class="config-header">🔧 Google Sheets Configuration</div>
-            <div class="config-row">
-                <input type="text" id="apiKeyInput" class="config-input" placeholder="Enter your Google API Key (starts with AIza...)">
-                <input type="text" id="sheetIdInput" class="config-input" placeholder="Enter your Google Sheet ID">
-                <button class="btn" id="connectBtn">Connect Sheet</button>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalEquipment">-</div>
+                <div class="stat-label">Total Assets</div>
             </div>
-            
-            <div class="setup-info">
-                📋 <strong>Setup Instructions:</strong><br><br>
-                <strong>1. Get API Key:</strong><br>
-                • Go to <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a><br>
-                • Create new project → Enable "Google Sheets API" → Create API Key<br><br>
-                
-                <strong>2. Prepare Google Sheet:</strong><br>
-                • Create new Google Sheet<br>
-                • Add headers: ID | Name | Tag | Category | Status | Assignee | Location | PurchaseDate | Cost | WarrantyExpiry | Supplier | Notes | LastUpdated<br>
-                • Share → Anyone with link → Editor<br>
-                • Copy Sheet ID from URL (between /d/ and /edit)<br><br>
-                
-                <strong>3. Test your setup:</strong><br>
-                • Enter credentials above and click "Connect Sheet"
+            <div class="stat-card">
+                <div class="stat-value" id="availableEquipment">-</div>
+                <div class="stat-label">Available</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="inUseEquipment">-</div>
+                <div class="stat-label">In Use</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="maintenanceEquipment">-</div>
+                <div class="stat-label">Maintenance</div>
             </div>
         </div>
 
-        <div class="main-content" id="mainContent">
-            <div class="empty-state-icon">🔧</div>
-            <h3>Google Sheets Not Connected</h3>
-            <p>Please enter your API Key and Sheet ID above to get started.</p>
+        <div class="controls">
+            <div class="controls-row">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search equipment by name, tag, or assignee...">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <select id="categoryFilter" class="filter-select">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="statusFilter" class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="available">Available</option>
+                    <option value="in-use">In Use</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="retired">Retired</option>
+                </select>
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Equipment</button>
+            </div>
+            <div class="controls-row">
+                <button class="btn btn-success" onclick="refreshData()">🔄 Refresh</button>
+                <button class="btn btn-primary" onclick="exportData()">📊 Export</button>
+            </div>
+        </div>
+
+        <div id="equipmentContainer">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading equipment data from Google Sheets...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Equipment Modal -->
+    <div id="equipmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add New Equipment</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="equipmentForm">
+                <div class="form-group">
+                    <label class="form-label">Equipment Name</label>
+                    <input type="text" id="equipmentName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Asset Tag / Serial Number</label>
+                    <input type="text" id="equipmentTag" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="equipmentCategory" class="form-select" required>
+                        <option value="">Select Category</option>
+                        <option value="Computers">Computers</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Vehicles">Vehicles</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Office Equipment">Office Equipment</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="equipmentStatus" class="form-select" required>
+                        <option value="available">Available</option>
+                        <option value="in-use">In Use</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="retired">Retired</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assigned To</label>
+                    <input type="text" id="equipmentAssignee" class="form-input" placeholder="Employee name or department">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" id="equipmentLocation" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purchase Date</label>
+                    <input type="date" id="equipmentPurchaseDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purchase Cost ($)</label>
+                    <input type="number" id="equipmentCost" class="form-input" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warranty Expiry</label>
+                    <input type="date" id="equipmentWarranty" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Supplier/Vendor</label>
+                    <input type="text" id="equipmentSupplier" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea id="equipmentNotes" class="form-textarea" placeholder="Additional notes, specifications, or comments..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Equipment</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
         // Global variables
-        let API_KEY = '';
-        let SHEET_ID = '';
+        let API_KEY = sessionStorage.getItem('googleApiKey') || '';
+        let SHEET_ID = sessionStorage.getItem('googleSheetId') || '';
+        let equipmentData = [];
+        let filteredData = [];
+        let editingEquipment = null;
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('App loading...');
-            loadConfiguration();
             setupEventListeners();
+            loadDataFromSheet();
         });
 
         function setupEventListeners() {
-            const connectBtn = document.getElementById('connectBtn');
-            if (connectBtn) {
-                connectBtn.addEventListener('click', saveConfiguration);
-                console.log('Connect button listener added');
-            }
+            document.getElementById('searchInput').addEventListener('input', filterEquipment);
+            document.getElementById('categoryFilter').addEventListener('change', filterEquipment);
+            document.getElementById('statusFilter').addEventListener('change', filterEquipment);
+            document.getElementById('equipmentForm').addEventListener('submit', handleFormSubmit);
         }
 
-        function saveConfiguration() {
-            console.log('saveConfiguration called');
-            
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            const sheetId = document.getElementById('sheetIdInput').value.trim();
-            
-            console.log('API Key length:', apiKey.length);
-            console.log('Sheet ID length:', sheetId.length);
-            
-            if (!apiKey || !sheetId) {
-                alert('Please enter both API Key and Sheet ID');
-                return;
-            }
-
-            if (!apiKey.startsWith('AIza')) {
-                alert('API Key should start with "AIza". Please check your API key.');
-                return;
-            }
-
-            API_KEY = apiKey;
-            SHEET_ID = sheetId;
-            
-            // Save to session storage
-            sessionStorage.setItem('googleApiKey', API_KEY);
-            sessionStorage.setItem('googleSheetId', SHEET_ID);
-            
-            console.log('Configuration saved, attempting to connect...');
-            testConnection();
-        }
-
-        function loadConfiguration() {
-            API_KEY = sessionStorage.getItem('googleApiKey') || '';
-            SHEET_ID = sessionStorage.getItem('googleSheetId') || '';
-            
-            if (API_KEY && SHEET_ID) {
-                document.getElementById('apiKeyInput').value = API_KEY;
-                document.getElementById('sheetIdInput').value = SHEET_ID;
-                console.log('Existing configuration found, testing connection...');
-                testConnection();
-            } else {
-                updateSyncStatus('error', 'Not connected - Please configure Google Sheets');
-            }
-        }
-
-        async function testConnection() {
+        async function loadDataFromSheet() {
             try {
-                updateSyncStatus('loading', 'Testing connection to Google Sheets...');
+                updateSyncStatus('Loading data from Google Sheets...');
                 
-                const testUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A1:M1?key=${API_KEY}`;
-                console.log('Testing URL:', testUrl);
-                
-                const response = await fetch(testUrl);
-                console.log('Response status:', response.status);
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`
+                );
                 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('API Error:', errorText);
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    throw new Error(`Failed to load data: ${response.status}`);
                 }
                 
                 const data = await response.json();
-                console.log('Connection successful!', data);
+                const rows = data.values || [];
                 
-                updateSyncStatus('success', 'Successfully connected to Google Sheets!');
-                document.getElementById('configSection').style.display = 'none';
-                showSuccessMessage();
+                if (rows.length <= 1) {
+                    equipmentData = [];
+                } else {
+                    equipmentData = rows.slice(1).map((row, index) => ({
+                        id: row[0] || (index + 1),
+                        name: row[1] || '',
+                        tag: row[2] || '',
+                        category: row[3] || '',
+                        status: row[4] || 'available',
+                        assignee: row[5] || '',
+                        location: row[6] || '',
+                        purchaseDate: row[7] || '',
+                        cost: parseFloat(row[8]) || 0,
+                        warrantyExpiry: row[9] || '',
+                        supplier: row[10] || '',
+                        notes: row[11] || '',
+                        lastUpdated: row[12] || new Date().toISOString().split('T')[0]
+                    }));
+                }
+                
+                updateSyncStatus('Connected to Google Sheets');
+                updateStats();
+                populateFilters();
+                renderEquipment();
                 
             } catch (error) {
-                console.error('Connection failed:', error);
-                updateSyncStatus('error', 'Connection failed: ' + error.message);
-                showErrorMessage(error.message);
+                console.error('Error loading data:', error);
+                updateSyncStatus('Failed to load data from Google Sheets');
+                showError('Failed to load data from Google Sheets: ' + error.message);
             }
         }
 
-        function updateSyncStatus(status, message) {
-            const dot = document.getElementById('syncDot');
-            const statusText = document.getElementById('syncStatus');
-            
-            dot.className = 'sync-dot';
-            if (status === 'success') {
-                dot.classList.add('connected');
+        async function saveDataToSheet() {
+            try {
+                updateSyncStatus('Saving to Google Sheets...');
+                
+                const headers = ['ID', 'Name', 'Tag', 'Category', 'Status', 'Assignee', 'Location', 
+                               'PurchaseDate', 'Cost', 'WarrantyExpiry', 'Supplier', 'Notes', 'LastUpdated'];
+                
+                const rows = [headers, ...equipmentData.map(item => [
+                    item.id,
+                    item.name,
+                    item.tag,
+                    item.category,
+                    item.status,
+                    item.assignee || '',
+                    item.location,
+                    item.purchaseDate || '',
+                    item.cost || '',
+                    item.warrantyExpiry || '',
+                    item.supplier || '',
+                    item.notes || '',
+                    item.lastUpdated
+                ])];
+                
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?valueInputOption=RAW&key=${API_KEY}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            values: rows
+                        })
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to save: ${response.status}`);
+                }
+                
+                updateSyncStatus('Connected to Google Sheets');
+                showNotification('Data saved successfully!');
+                
+            } catch (error) {
+                console.error('Error saving data:', error);
+                updateSyncStatus('Save failed - Check connection');
+                showNotification('Save failed: ' + error.message, 'error');
             }
-            
-            statusText.textContent = message;
-            console.log('Status:', status, message);
         }
 
-        function showSuccessMessage() {
-            document.getElementById('mainContent').innerHTML = `
-                <div class="empty-state-icon">✅</div>
-                <h3>Connected Successfully!</h3>
-                <p>Your Google Sheet is connected and ready to use.</p>
-                <p style="margin-top: 20px; color: #666;">
-                    <strong>Next steps:</strong><br>
-                    This is a basic connection test. You can now extend this app with full equipment management features.
-                </p>
+        function updateSyncStatus(message) {
+            document.getElementById('syncStatus').textContent = message;
+        }
+
+        function updateStats() {
+            const total = equipmentData.length;
+            const available = equipmentData.filter(item => item.status === 'available').length;
+            const inUse = equipmentData.filter(item => item.status === 'in-use').length;
+            const maintenance = equipmentData.filter(item => item.status === 'maintenance').length;
+
+            document.getElementById('totalEquipment').textContent = total;
+            document.getElementById('availableEquipment').textContent = available;
+            document.getElementById('inUseEquipment').textContent = inUse;
+            document.getElementById('maintenanceEquipment').textContent = maintenance;
+        }
+
+        function populateFilters() {
+            const categories = [...new Set(equipmentData.map(item => item.category))];
+            const categoryFilter = document.getElementById('categoryFilter');
+            
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(category => {
+                if (category) {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categoryFilter.appendChild(option);
+                }
+            });
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'available': return 'Available';
+                case 'in-use': return 'In Use';
+                case 'maintenance': return 'Maintenance';
+                case 'retired': return 'Retired';
+                default: return status;
+            }
+        }
+
+        function renderEquipment() {
+            const container = document.getElementById('equipmentContainer');
+            
+            if (filteredData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏢</div>
+                        <h3>No equipment found</h3>
+                        <p>Try adjusting your search criteria or add new equipment to your inventory.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <div class="equipment-grid">
+                    ${filteredData.map(item => {
+                        const warrantyStatus = item.warrantyExpiry && new Date(item.warrantyExpiry) < new Date() ? '⚠️ Expired' : '✅ Valid';
+                        
+                        return `
+                            <div class="equipment-card">
+                                <div class="equipment-header">
+                                    <div class="equipment-name">${item.name}</div>
+                                    <div class="status-badge status-${item.status.replace(' ', '-')}">
+                                        ${getStatusText(item.status)}
+                                    </div>
+                                </div>
+                                <div class="equipment-details">
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Asset Tag:</span>
+                                        <span class="equipment-detail-value">${item.tag}</span>
+                                    </div>
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Category:</span>
+                                        <span class="equipment-detail-value">${item.category}</span>
+                                    </div>
+                                    ${item.assignee ? `
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Assigned To:</span>
+                                        <span class="equipment-detail-value">${item.assignee}</span>
+                                    </div>
+                                    ` : ''}
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Location:</span>
+                                        <span class="equipment-detail-value">${item.location}</span>
+                                    </div>
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Cost:</span>
+                                        <span class="equipment-detail-value">$${item.cost ? item.cost.toLocaleString() : 'N/A'}</span>
+                                    </div>
+                                    <div class="equipment-detail">
+                                        <span class="equipment-detail-label">Warranty:</span>
+                                        <span class="equipment-detail-value">${item.warrantyExpiry ? warrantyStatus : 'N/A'}</span>
+                                    </div>
+                                </div>
+                                <div class="equipment-actions">
+                                    <button class="btn btn-primary btn-small" onclick="editEquipment('${item.id}')">Edit</button>
+                                    ${item.status === 'available' ? 
+                                        `<button class="btn btn-success btn-small" onclick="checkoutEquipment('${item.id}')">Check Out</button>` :
+                                        item.status === 'in-use' ?
+                                        `<button class="btn btn-warning btn-small" onclick="checkinEquipment('${item.id}')">Check In</button>` :
+                                        `<button class="btn btn-warning btn-small" onclick="updateStatus('${item.id}')">Update</button>`
+                                    }
+                                    <button class="btn btn-danger btn-small" onclick="deleteEquipment('${item.id}')">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
             `;
+            
+            container.innerHTML = html;
         }
 
-        function showErrorMessage(error) {
-            document.getElementById('mainContent').innerHTML = `
-                <div class="empty-state-icon">❌</div>
-                <h3>Connection Failed</h3>
-                <p>Could not connect to your Google Sheet.</p>
-                <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: left;">
-                    <strong>Error:</strong> ${error}<br><br>
-                    <strong>Common solutions:</strong><br>
-                    • Check your API key is correct (starts with AIza)<br>
-                    • Verify Sheet ID is correct<br>
-                    • Make sure Google Sheets API is enabled<br>
-                    • Ensure sheet is shared publicly (Anyone with link → Editor)
+        function filterEquipment() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            filteredData = equipmentData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchTerm) ||
+                                    item.tag.toLowerCase().includes(searchTerm) ||
+                                    item.category.toLowerCase().includes(searchTerm) ||
+                                    (item.assignee && item.assignee.toLowerCase().includes(searchTerm)) ||
+                                    item.location.toLowerCase().includes(searchTerm);
+                
+                const matchesCategory = !categoryFilter || item.category === categoryFilter;
+                const matchesStatus = !statusFilter || item.status === statusFilter;
+
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+
+            renderEquipment();
+        }
+
+        function openAddModal() {
+            editingEquipment = null;
+            document.getElementById('modalTitle').textContent = 'Add New Equipment';
+            document.getElementById('equipmentForm').reset();
+            document.getElementById('equipmentModal').style.display = 'flex';
+        }
+
+        function editEquipment(id) {
+            editingEquipment = equipmentData.find(item => item.id == id);
+            if (!editingEquipment) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Equipment';
+            document.getElementById('equipmentName').value = editingEquipment.name;
+            document.getElementById('equipmentTag').value = editingEquipment.tag;
+            document.getElementById('equipmentCategory').value = editingEquipment.category;
+            document.getElementById('equipmentStatus').value = editingEquipment.status;
+            document.getElementById('equipmentAssignee').value = editingEquipment.assignee || '';
+            document.getElementById('equipmentLocation').value = editingEquipment.location;
+            document.getElementById('equipmentPurchaseDate').value = editingEquipment.purchaseDate;
+            document.getElementById('equipmentWarranty').value = editingEquipment.warrantyExpiry || '';
+            document.getElementById('equipmentSupplier').value = editingEquipment.supplier || '';
+            document.getElementById('equipmentNotes').value = editingEquipment.notes || '';
+            
+            document.getElementById('equipmentModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('equipmentModal').style.display = 'none';
+            editingEquipment = null;
+        }
+
+        function checkoutEquipment(id) {
+            const equipment = equipmentData.find(item => item.id == id);
+            if (!equipment) return;
+
+            const assignee = prompt(`Check out ${equipment.name} to:`, '');
+            if (!assignee) return;
+
+            equipment.status = 'in-use';
+            equipment.assignee = assignee;
+            equipment.lastUpdated = new Date().toISOString().split('T')[0];
+
+            showNotification(`${equipment.name} checked out to ${assignee}!`);
+            updateStats();
+            renderEquipment();
+            saveDataToSheet();
+        }
+
+        function checkinEquipment(id) {
+            if (!confirm('Are you sure you want to check in this equipment?')) return;
+
+            const equipment = equipmentData.find(item => item.id == id);
+            if (!equipment) return;
+
+            equipment.status = 'available';
+            equipment.assignee = '';
+            equipment.lastUpdated = new Date().toISOString().split('T')[0];
+
+            showNotification(`${equipment.name} checked in successfully!`);
+            updateStats();
+            renderEquipment();
+            saveDataToSheet();
+        }
+
+        function updateStatus(id) {
+            const equipment = equipmentData.find(item => item.id == id);
+            if (!equipment) return;
+
+            const newStatus = prompt(`Update status for ${equipment.name}:\n\nCurrent: ${getStatusText(equipment.status)}\n\nEnter new status (available, in-use, maintenance, retired):`, equipment.status);
+            
+            if (newStatus && ['available', 'in-use', 'maintenance', 'retired'].includes(newStatus)) {
+                equipment.status = newStatus;
+                equipment.lastUpdated = new Date().toISOString().split('T')[0];
+                
+                if (newStatus === 'available') {
+                    equipment.assignee = '';
+                }
+
+                showNotification(`Status updated for ${equipment.name}!`);
+                updateStats();
+                renderEquipment();
+                saveDataToSheet();
+            }
+        }
+
+        function deleteEquipment(id) {
+            const equipment = equipmentData.find(item => item.id == id);
+            if (!equipment) return;
+
+            if (!confirm(`Are you sure you want to delete ${equipment.name}?\n\nThis action cannot be undone.`)) return;
+
+            const index = equipmentData.findIndex(item => item.id == id);
+            equipmentData.splice(index, 1);
+            
+            showNotification(`${equipment.name} deleted successfully!`);
+            updateStats();
+            populateFilters();
+            filterEquipment();
+            saveDataToSheet();
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('equipmentName').value,
+                tag: document.getElementById('equipmentTag').value,
+                category: document.getElementById('equipmentCategory').value,
+                status: document.getElementById('equipmentStatus').value,
+                assignee: document.getElementById('equipmentAssignee').value,
+                location: document.getElementById('equipmentLocation').value,
+                purchaseDate: document.getElementById('equipmentPurchaseDate').value,
+                cost: parseFloat(document.getElementById('equipmentCost').value) || 0,
+                warrantyExpiry: document.getElementById('equipmentWarranty').value,
+                supplier: document.getElementById('equipmentSupplier').value,
+                notes: document.getElementById('equipmentNotes').value,
+                lastUpdated: new Date().toISOString().split('T')[0]
+            };
+
+            if (editingEquipment) {
+                // Update existing equipment
+                const index = equipmentData.findIndex(item => item.id == editingEquipment.id);
+                equipmentData[index] = { ...equipmentData[index], ...formData };
+            } else {
+                // Add new equipment
+                const newId = equipmentData.length > 0 ? Math.max(...equipmentData.map(item => parseInt(item.id))) + 1 : 1;
+                equipmentData.push({ id: newId, ...formData });
+            }
+
+            showNotification(editingEquipment ? 'Equipment updated successfully!' : 'Equipment added successfully!');
+            
+            updateStats();
+            populateFilters();
+            filterEquipment();
+            closeModal();
+            saveDataToSheet();
+        }
+
+        function refreshData() {
+            loadDataFromSheet();
+        }
+
+        function exportData() {
+            const csv = convertToCSV(equipmentData);
+            downloadCSV(csv, 'equipment_report.csv');
+            showNotification('Equipment report exported successfully!');
+        }
+
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+            
+            const headers = ['ID', 'Name', 'Asset Tag', 'Category', 'Status', 'Assigned To', 'Location', 
+                           'Purchase Date', 'Cost', 'Warranty Expiry', 'Supplier', 'Notes', 'Last Updated'];
+            const csvRows = [headers.join(',')];
+            
+            for (const item of data) {
+                const values = [
+                    item.id,
+                    `"${item.name}"`,
+                    `"${item.tag}"`,
+                    `"${item.category}"`,
+                    item.status,
+                    `"${item.assignee || ''}"`,
+                    `"${item.location}"`,
+                    item.purchaseDate || '',
+                    item.cost || '',
+                    item.warrantyExpiry || '',
+                    `"${item.supplier || ''}"`,
+                    `"${item.notes || ''}"`,
+                    item.lastUpdated
+                ];
+                csvRows.push(values.join(','));
+            }
+            
+            return csvRows.join('\n');
+        }
+
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', filename);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? '#4CAF50' : '#f44336';
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                z-index: 2000;
+                font-weight: 600;
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(400px)';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function showError(message) {
+            const container = document.getElementById('equipmentContainer');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">❌</div>
+                    <h3>Error Loading Data</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="refreshData()" style="margin-top: 20px;">
+                        Try Again
+                    </button>
                 </div>
             `;
         }
 
-        // Debug function
-        function checkElements() {
-            console.log('API Key input:', document.getElementById('apiKeyInput'));
-            console.log('Sheet ID input:', document.getElementById('sheetIdInput'));
-            console.log('Connect button:', document.getElementById('connectBtn'));
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('equipmentModal');
+            if (event.target === modal) {
+                closeModal();
+            }
         }
 
-        // Call debug function after page loads
-        setTimeout(checkElements, 1000);
+        // Initialize filtered data when page loads
+        filteredData = [...equipmentData];
     </script>
 </body>
 </html>
