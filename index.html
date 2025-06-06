@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merrick Maintenance Equipment Asset Manager</title>
+    <title>Equipment Asset Manager</title>
     <style>
         * {
             margin: 0;
@@ -516,8 +516,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏢 Merrick Equipment Asset Manager</h1>
-            <p>Buildings and Grounds</p>
+            <h1>🏢 Equipment Asset Manager</h1>
+            <p>Track and manage your organization's equipment and assets</p>
             <div class="sync-status">
                 <div class="sync-dot error" id="syncDot"></div>
                 <span id="syncStatus">Not connected to Google Sheets</span>
@@ -680,6 +680,26 @@
             loadConfiguration();
             setupEventListeners();
         });
+
+        function saveConfiguration() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            const sheetId = document.getElementById('sheetIdInput').value.trim();
+            
+            if (!apiKey || !sheetId) {
+                alert('Please enter both API Key and Sheet ID');
+                return;
+            }
+
+            API_KEY = apiKey;
+            SHEET_ID = sheetId;
+            
+            // Save to session storage
+            sessionStorage.setItem('googleApiKey', API_KEY);
+            sessionStorage.setItem('googleSheetId', SHEET_ID);
+            
+            document.getElementById('configSection').style.display = 'none';
+            loadDataFromSheet();
+        }
 
         function loadConfiguration() {
             API_KEY = sessionStorage.getItem('googleApiKey') || '';
